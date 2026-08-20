@@ -1,62 +1,41 @@
-# 处境解 Skill 包 v2（dbskill 思路重构版）
+# 处境解
 
-## 相比 v1 的改动
+一套帮你理清楚人生方向、目标、规划和执行卡点的对话工具。不需要你自己想清楚该问什么、该按什么顺序说——正常说出你的困惑就行，剩下的交给它。
 
-参考 [dbskill](https://github.com/dontbesilent2025/dbskill) 的架构思路，做了四层改动：
+## 怎么用
 
-1. **内容原子化**：所有内容不再直接写死在 SKILL.md 里，而是拆成结构化的 `references/atoms.jsonl`，每条带 `type`、`confidence`、`topic` 等标签，SKILL.md 只保留路由逻辑和对话原则，按需引用 atoms。
-2. **单 skill 独立**：每个 skill 自带自己的 `references/atoms.jsonl`，不依赖其他 skill 才能运作——单独装一个 skill 也能完整工作。
-3. **主入口 + 消解预检**：新增 `chujingjie` 作为主入口，先判断用户的困惑值不值得走完整诊断（伪问题/单点认知偏差/信息不足 vs 真正需要诊断），再决定调用哪个子 skill，且不预设固定顺序，每一步做完根据实际结论决定下一步。
-4. **原来的"四步"拆成四个独立 skill**：`chujingjie-nengliquan`（能力圈）/ `chujingjie-mubiao`（目标）/ `chujingjie-guihua`（规划）/ `chujingjie-zhixing`（执行），可以被路由调用，也可以被用户的具体表达直接单独命中，不强制走完四步。
+装好之后，直接说你的困惑，比如：
 
-## 目录结构
+- "我很迷茫，不知道自己该往哪走"
+- "我想学AI，但不知道具体该怎么开始"
+- "我有个方向了，但担心只有一条路走不通怎么办"
+- "我总是三天打鱼两天晒网，坚持不下去"
+- "我要不要跳槽/裸辞/接受这个offer"
+- "帮我看看这个决定是不是有问题，我总觉得哪里不对"
 
-```
-skills/
-  chujingjie/                    # 主入口：消解 + 路由，不产出诊断内容
-  chujingjie-nengliquan/         # 能力圈（原第一步）
-    SKILL.md
-    references/atoms.jsonl
-  chujingjie-mubiao/             # 目标（原第二步）
-    SKILL.md
-    references/atoms.jsonl
-  chujingjie-guihua/             # 规划（原第三步）
-    SKILL.md
-    references/atoms.jsonl
-  chujingjie-zhixing/            # 执行（原第四步）
-    SKILL.md
-    references/atoms.jsonl
-  chujingjie-zhongda-juece/      # 重大决策工具箱（原本就独立，这次改为引用atoms）
-    SKILL.md
-    references/atoms.jsonl
-  chujingjie-renzhi-pianwu/      # 认知偏差清单（原本就独立，这次改为引用atoms）
-    SKILL.md
-    references/atoms.jsonl
-state/
-  README.md                      # 跨会话状态记录的机制说明和已知限制
-```
+不需要说"用处境解"或者点名要用哪个功能，也不需要一次性把话说全——它会顺着你的话往下追问，帮你把模糊的感觉理清楚成具体的判断。
 
-## atoms.jsonl 字段说明
+## 这套工具能帮你理清楚什么
 
-两种类型的条目：
+- **不知道自己适合做什么**：看清楚自己真实的优势和现在的起点，而不是凭感觉高估或低估自己。
+- **有方向但说不清楚具体要什么**：把模糊的"我想……"逼问成具体、能验证的目标，判断这是不是自己真正想要的。
+- **目标清楚但不敢只押一条路**：规划出一条留有余地的路径，不是赌上全部身家的独木桥。
+- **想做但总是执行不下去**：找到真正能每天坚持的最小动作，而不是靠自责硬撑。
+- **面临一个具体的岔路口决定**（跳槽/转行/合伙/裸辞……）：把"凭感觉"的选择拆解成可以分析、可以验证的判断。
+- **总觉得自己的某个判断可能想岔了**：帮你检查是不是掉进了从众、沉没成本、自视过高这类常见的心理陷阱。
 
-**编号问答类**（来自原有的问题库）：
-```json
-{"id": "...", "skill": "...", "type": "principle", "confidence": "high", "topic": "...",
- "question": "追问角度", "core_insight": "要传达的认知", "misconception": "常见误区",
- "plain_talk": "口语化表达", "action": "可执行的小动作", "quote": "金句"}
-```
+## 需要安装的部分
 
-**自由补充类**（来自往期自媒体文案提炼的思维工具，比如逆向倒推法、杠铃策略）：
-```json
-{"id": "...", "skill": "...", "type": "principle", "confidence": "high", "topic": "...",
- "title": "工具名", "content": "完整说明"}
-```
+这套工具是几个可以配合工作的模块，全部装上效果最好，也可以只装你需要的部分：
 
-`confidence` 目前全部标为 `high`（因为是从已经提炼过的内容转换而来）。以后如果直接从原始文案/推文批量生成 atoms，应该按实际置信度区分 `high`/`medium`/`low`，方便后续按置信度筛选。
+| 模块 | 什么时候会用到 |
+|---|---|
+| `chujingjie` | 不确定自己具体卡在哪，只是"很迷茫"时，先接住你的情况 |
+| `chujingjie-nengliquan` | 理清楚你擅长什么、真实的起点在哪 |
+| `chujingjie-mubiao` | 把模糊的方向定成具体、可验证的目标 |
+| `chujingjie-guihua` | 把目标规划成留有余地的路径 |
+| `chujingjie-zhixing` | 把计划拆成每天能坚持的小动作 |
+| `chujingjie-zhongda-juece` | 分析一个具体的岔路口决定 |
+| `chujingjie-renzhi-pianwu` | 检查一个判断是不是有认知偏差 |
 
-## 已知未完成事项（诚实列出，不是全部做完了）
-
-- **消解判断（chujingjie 的第一步）没有实测**：写的是规则，但"1-2个问题判断出属于哪一类"的实际效果，需要用真实对话测试，不同底层模型（尤其是较弱的模型）的判断准确率可能有明显差异，建议正式使用前先跑几个真实案例测试。
-- **豆包侧的落地方式还没确认**：这次重构默认目标环境是支持多文件 skill 结构的环境（比如 Claude）。如果要在豆包上复现同样的效果，需要先确认豆包智能体后台是否支持类似"按需加载知识库"的机制，而不是直接把六个 SKILL.md 全部塞进一个 system prompt——那样等于走回了旧豆包版的老路，之前提的 token 膨胀和路由脆弱问题会原样出现。这一步我没有能力代你确认，需要你去看豆包的产品文档或实测。
-- **atoms.jsonl 目前是从已经写好的中文内容自动解析出来的**，不是从原始素材重新原子化提炼的，所以 `confidence` 字段目前区分度不大，只是先把结构立起来。
+不用记住这张表——你只需要说出你的困惑，装了哪些模块，就会自动用上对应的那个。
